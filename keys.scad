@@ -8,9 +8,10 @@
 include <./includes.scad>
 
 
-// Kiwi 36 keycaps (DSA profile). Press F5 to preview, F6 to render for slicing.
-$fn = 32; // preview resolution; the render targets below bump this to 64.
-kiwi36_default("dsa") key();
+// Keycaps for a board. Press F5 to preview, F6 to render.
+$fn = 32; // preview resolution; bump to 64+ before F6 for a smooth render.
+mountain_breeze_default("dsa", sculpt=true, thumb_raise=1.5) key();
+// kiwi36_default("dsa") key();
 
 // --- other examples (uncomment to use) ---
 
