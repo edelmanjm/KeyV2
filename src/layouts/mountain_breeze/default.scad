@@ -51,10 +51,8 @@ mb_cluster = (mb_cluster_mode == "numpad") ? mb_cluster_numpad : mb_cluster_arro
 mb_main_row  = [1, 1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1, 1, -0.5, 1, 1, 1];
 mb_main_rows = [mb_main_row, mb_main_row, mb_main_row, mb_main_row];  // rows 0-3
 
-// Legends, transcribed from the product photo. A few are best-guesses where the
-// photo is unclear -- edit the ones marked (?) below.
-// A cell is a string (one centered legend) OR a [lower, upper] pair, which
-// renders as two stacked legends -- used here for number + shifted symbol.
+// Legends, transcribed from the product photo. A cell is a string (one centered
+// legend) OR a [lower, upper] pair -> two stacked legends (number + shift symbol).
 mb_left_main = [                       // 4 rows x 6 cols (outer mod column first)
   ["esc",   ["1","!"], ["2","@"], ["3","#"], ["4","$"], ["5","%"]],
   [["`","~"], "Q", "W", "E", "R", "T"],  // grave/tilde (was Tab)
@@ -67,14 +65,7 @@ mb_right_main = [                      // 4 rows x 6 cols (inner column last)
   ["H", "J", "K", "L", [";",":"], ["'","\""]],
   ["N", "M", [",","<"], [".",">"], ["/","?"], "⇧"]
 ];
-// The "Windows"/Super key glyph. text() can only show glyphs the active font
-// contains, and the same font is used for the whole board -- so a Tux penguin
-// needs a MONOCHROME emoji font installed and set globally (color-emoji fonts
-// won't extrude, and it would restyle the letters too). "Super" always renders.
-mb_win = "⌘";          // Command/Super symbol
-// mb_win = "Super";   // plain text label
-// mb_win = "⊞";       // squared-plus: compact Windows-style glyph (font-dependent)
-// mb_win = "🐧";      // Tux: only with a mono emoji font selected globally
+mb_win = "⌘";   // Super/Command glyph used in the left bottom-row cluster
 
 // Bottom-row (thumb) clusters. Left: Option / Control / Super. Right: Backspace
 // / Delete / fn.
@@ -93,16 +84,35 @@ mb_main_legends = [
   concat(mb_left_main[3], [""], mb_right_main[3], [""], mb_cluster[3])
 ];
 
-// Apply one main-block legend cell. String -> a single centered legend;
-// [lower, upper] pair -> two stacked legends (number + shifted symbol). The
-// position/size numbers are fudge constants -- nudge them if it looks off.
+// Symbols the main text font may lack (Mac modifiers, arrows, volume triangles)
+// render in $mb_symbol_font; everything else uses the main $font.
+mb_symbol_glyphs = ["⌘","⌥","⌃","⇧","⇥","⇪","↩","⌫","⌦","▲","▼","←","↑","↓","→"];
+function mb_is_symbol(s) = len([for (g = mb_symbol_glyphs) if (g == s) 1]) > 0;
+
+// Text-label mode ($mb_text, from `symbols=false`): render symbol glyphs as
+// words so a symbol-less text font (National Park) can draw the whole board in
+// one font. Arrows stay glyphs (National Park has ←↑↓→); only the Mac keys and
+// the volume triangles become words.
+mb_symbol_text = [
+  ["⌘","cmd"], ["⌥","alt"], ["⌃","ctrl"], ["⇧","shift"], ["⇥","tab"], ["⇪","caps"],
+  ["↩","enter"], ["⌫","bksp"], ["⌦","del"], ["▲","vol+"], ["▼","vol-"]
+];
+function mb_label(s)    = let(m = [for (p = mb_symbol_text) if (p[0]==s) p[1]]) len(m) > 0 ? m[0] : s;
+function mb_disp(s)     = $mb_blank ? "" : ($mb_text ? mb_label(s) : s);       // display string ("" = blank)
+function mb_font_for(s) = $mb_text ? $font : (mb_is_symbol(s) ? $mb_symbol_font : $font);
+function mb_size_for(s) = let(d = mb_disp(s)) $font_size * (len(d) > 1 ? 0.8 : 1);   // words shrink uniformly
+
+// Apply one main-block legend cell. String -> single centered legend (glyph or
+// word per the mode, in the right font); [lower, upper] pair -> two stacked.
 module mb_main_key(spec) {
-  if (is_list(spec)) {
+  if ($mb_blank) {
+    key();                                          // blank cap, no legend
+  } else if (is_list(spec)) {
     legend(spec[0], [0,  0.8], $font_size * 0.8)    // lower: number
       legend(spec[1], [0, -0.8], $font_size * 0.8)  // upper: shifted symbol
         key();
   } else {
-    legend(spec) key();
+    legend(mb_disp(spec), [0, 0], mb_size_for(spec), mb_font_for(spec)) key();
   }
 }
 
@@ -127,12 +137,25 @@ module mb_main_key(spec) {
 // legend_size : legend font size (mm). Default 3.6 for small, Apple-Magic-Keyboard
 //             -ish lettering; KeyV2's stock default is a chunky 6. Stacked symbol
 //             pairs are drawn at 0.8x this.
-module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, thumb_raise = 0, column_sculpt = "disable", legend_size = 3.6, sls = false) {
+// font        : main text font. undef (default) keeps KeyV2's stock font; else a
+//             named family (must be installed), e.g. "Inter", "National Park".
+// symbol_font : font for the symbols the text font may lack (⌘⌥⌃⇧⇥⇪↩⌫⌦ ▲▼ arrows).
+//             Defaults to the main `font` (fine for a complete font like Inter);
+//             for a text-only font (National Park) set e.g. "DejaVu Sans Mono".
+// legends     : true (default) -> render legends. false -> blank caps (no legends).
+// symbols     : true (default) -> Mac symbol glyphs (via symbol_font). false ->
+//             render them as text words in the main font, so a symbol-less font
+//             like National Park needs no fallback at all.
+module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, thumb_raise = 0, column_sculpt = "disable", legend_size = 3.6, sls = false, font = undef, symbol_font = undef, symbols = true, legends = true) {
   $double_sculpted = (column_sculpt != "disable");
   // sls: true -> disable stem supports (SLS powder bed self-supports) + nylon slop.
   $stem_support_type = sls ? "disable" : $stem_support_type;
   $stem_slop         = sls ? 0.15      : $stem_slop;
   $font_size = legend_size;   // smaller lettering than the stock default of 6
+  $font = is_undef(font) ? $font : font;                  // undef = keep KeyV2's stock font
+  $mb_symbol_font = is_undef(symbol_font) ? $font : symbol_font;
+  $mb_text = !symbols;        // text-label mode when symbols=false
+  $mb_blank = !legends;       // blank caps (no legends) when legends=false
 
   // Main 6x4 blocks (both hands) + the right cluster, rows 0-3. Legends are
   // applied per key from mb_main_legends via $row/$column, so a cell can be a
@@ -154,7 +177,7 @@ module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, t
     [9.5, mb_right_bottom[0]], [10.5, mb_right_bottom[1]], [11.5, mb_right_bottom[2]]
   ];
   for (k = mb_bottom_1u) {
-    translate_u(k[0], -4) key_profile(profile, thumb_row) legend(k[1]) cherry() {
+    translate_u(k[0], -4) key_profile(profile, thumb_row) legend(mb_disp(k[1]), [0,0], mb_size_for(k[1]), mb_font_for(k[1])) cherry() {
       $total_depth = $total_depth + thumb_raise;
       if ($children) children(); else key();
     }
@@ -163,7 +186,7 @@ module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, t
   // The two 2u thumbs: 2u caps with stabilizer support, inboard of each hand.
   mb_thumbs = [[5, mb_left_thumb], [8, mb_right_thumb]];
   for (t = mb_thumbs) {
-    translate_u(t[0], -4) key_profile(profile, thumb_row) u(2) stabilized() legend(t[1]) cherry() {
+    translate_u(t[0], -4) key_profile(profile, thumb_row) u(2) stabilized() legend(mb_disp(t[1]), [0,0], mb_size_for(t[1]), mb_font_for(t[1])) cherry() {
       $total_depth = $total_depth + thumb_raise;
       if ($children) children(); else key();
     }
