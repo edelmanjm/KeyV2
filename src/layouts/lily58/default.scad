@@ -60,7 +60,9 @@ ly_main_legends = [
 // Apply one legend cell. String -> single centered legend; [lower, upper]
 // pair -> two stacked legends (base + shifted symbol).
 module ly_main_key(spec) {
-  if (is_list(spec)) {
+  if ($ly_blank) {
+    key();                              // blank cap, no legend
+  } else if (is_list(spec)) {
     legend(spec[0], [0,  0.8], $font_size * 0.8)
       legend(spec[1], [0, -0.8], $font_size * 0.8)
         key();
@@ -80,9 +82,10 @@ module ly_main_key(spec) {
 // legend_size : legend font size (mm).
 // font        : legend font family (must be installed / fontconfig-visible), e.g.
 //               "Routed Gothic", "National Park", "Inter". Default is KeyV2's.
-module lily58_default(profile = "dsa", sculpt = false, legend_size = 4, thumb_row = 3, font = "DejaVu Sans Mono", sls = false) {
+module lily58_default(profile = "dsa", sculpt = false, legend_size = 4, thumb_row = 3, font = "DejaVu Sans Mono", sls = false, legends = true) {
   $font_size = legend_size;
   $font = font;
+  $ly_blank = !legends;   // blank caps (no legends) when legends=false
   // sls: true -> disable stem supports (SLS powder bed self-supports) + nylon slop.
   $stem_support_type = sls ? "disable" : $stem_support_type;
   $stem_slop         = sls ? 0.15      : $stem_slop;
