@@ -35,7 +35,11 @@ kiwi36_legends = [
 // `profile` is a key profile like "dsa", "sa", "oem", "dcs", "g20".
 // DSA (uniform -- every row the same shape) is recommended for split ergo
 // boards, so that's the default. Pass another name to override.
-module kiwi36_default(profile = "dsa") {
+module kiwi36_default(profile = "dsa", sls = false) {
+  // sls: true -> disable stem supports (SLS's powder bed is self-supporting) and
+  // use a nylon-friendly stem slop. Default false keeps KeyV2's FDM tines/slop.
+  $stem_support_type = sls ? "disable" : $stem_support_type;
+  $stem_slop         = sls ? 0.15      : $stem_slop;
   layout(
     kiwi36_layout,
     profile,

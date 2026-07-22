@@ -127,8 +127,11 @@ module mb_main_key(spec) {
 // legend_size : legend font size (mm). Default 3.6 for small, Apple-Magic-Keyboard
 //             -ish lettering; KeyV2's stock default is a chunky 6. Stacked symbol
 //             pairs are drawn at 0.8x this.
-module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, thumb_raise = 0, column_sculpt = "disable", legend_size = 3.6) {
+module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, thumb_raise = 0, column_sculpt = "disable", legend_size = 3.6, sls = false) {
   $double_sculpted = (column_sculpt != "disable");
+  // sls: true -> disable stem supports (SLS powder bed self-supports) + nylon slop.
+  $stem_support_type = sls ? "disable" : $stem_support_type;
+  $stem_slop         = sls ? 0.15      : $stem_slop;
   $font_size = legend_size;   // smaller lettering than the stock default of 6
 
   // Main 6x4 blocks (both hands) + the right cluster, rows 0-3. Legends are

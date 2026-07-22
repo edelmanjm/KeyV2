@@ -98,8 +98,11 @@ module sl_main_key(spec) {
 // legend_size : legend font size (mm). Default 4.
 // The two 2u spacebars come from the width-2 cells; layout() gives them a
 // stabilizer automatically. Legends on them are blank.
-module superlyra_default(profile = "dsa", sculpt = false, legend_size = 4, bottom_row = 4, bottom_raise = 2) {
+module superlyra_default(profile = "dsa", sculpt = false, legend_size = 4, bottom_row = 4, bottom_raise = 2, sls = false) {
   $font_size = legend_size;
+  // sls: true -> disable stem supports (SLS powder bed self-supports) + nylon slop.
+  $stem_support_type = sls ? "disable" : $stem_support_type;
+  $stem_slop         = sls ? 0.15      : $stem_slop;
 
   // Top four rows (number / QWERTY / home / bottom-alpha). Sculpting maps them
   // to profile rows 1-4.

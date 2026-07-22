@@ -80,9 +80,12 @@ module ly_main_key(spec) {
 // legend_size : legend font size (mm).
 // font        : legend font family (must be installed / fontconfig-visible), e.g.
 //               "Routed Gothic", "National Park", "Inter". Default is KeyV2's.
-module lily58_default(profile = "dsa", sculpt = false, legend_size = 4, thumb_row = 3, font = "DejaVu Sans Mono") {
+module lily58_default(profile = "dsa", sculpt = false, legend_size = 4, thumb_row = 3, font = "DejaVu Sans Mono", sls = false) {
   $font_size = legend_size;
   $font = font;
+  // sls: true -> disable stem supports (SLS powder bed self-supports) + nylon slop.
+  $stem_support_type = sls ? "disable" : $stem_support_type;
+  $stem_slop         = sls ? 0.15      : $stem_slop;
 
   // Main grid, rows 0-3 (number / QWERTY / home / bottom-alpha + the [ ] extras).
   layout(
