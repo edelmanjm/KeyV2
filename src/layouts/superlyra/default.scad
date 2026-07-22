@@ -32,7 +32,7 @@ sl_left = [
   ["⇥",   ["`","~"], "Q", "W", "E", "R", "T"],
   ["⇪",   ["[","{"], "A", "S", "D", "F", "G"],
   ["⇧",   ["]","}"],        "Z", "X", "C", "V", "B"],   // NOTE: C2 here (R4) is an open blank
-  ["prtscr", "menu", "fn", "⌃", "⌥", "⌘", ""]          // C1 blank; fn/ctrl/opt/cmd/menu; 2u space
+  ["⎙", "☰", "fn", "⌃", "⌥", "⌘", ""]                  // prtscr / menu / fn / ctrl / opt / cmd; 2u space
 ];
 
 // RIGHT hand, 7 cols (C1 inner -> C7 outer/pinky) x 5 rows.
@@ -74,13 +74,31 @@ sl_legends = [
 
 // Apply one legend cell. String -> single centered legend; [lower, upper]
 // pair -> two stacked legends (base + shifted symbol).
+// Glyphs most text fonts (e.g. National Park) lack -- Mac modifier symbols, the
+// "clear" key, numpad triangles, and arrows. These render in $sl_symbol_font
+// (which has them) instead of the main text font.
+sl_symbol_glyphs = ["⌘","⌥","⌃","⇧","⇥","⇪","↩","⌫","⌦","⌧","◀","▶","←","↑","↓","→"];
+function sl_is_symbol(s) = len([for (g = sl_symbol_glyphs) if (g == s) 1]) > 0;
+
+// Glyphs that even complete text fonts like Inter lack (print screen, menu);
+// these render in $sl_rare_font (e.g. FreeMono) no matter the main/symbol font.
+sl_rare_glyphs = ["⎙","☰"];
+function sl_is_rare(s) = len([for (g = sl_rare_glyphs) if (g == s) 1]) > 0;
+
 module sl_main_key(spec) {
   if (is_list(spec)) {
     legend(spec[0], [0,  0.8], $font_size * 0.8)
       legend(spec[1], [0, -0.8], $font_size * 0.8)
         key();
+  } else if (sl_is_rare(spec)) {
+    legend(spec, [0, 0], $font_size, $sl_rare_font) key();     // rare-glyph fallback
+  } else if (sl_is_symbol(spec)) {
+    legend(spec, [0, 0], $font_size, $sl_symbol_font) key();   // symbol font
+  } else if (len(spec) > 1) {
+    // multi-letter words (esc, fn) shrink to fit the cap
+    legend(spec, [0, 0], $font_size * min(0.8, 3.0 / len(spec))) key();
   } else {
-    legend(spec) key();
+    legend(spec) key();                                        // main text font
   }
 }
 
@@ -96,10 +114,21 @@ module sl_main_key(spec) {
 //               lifts the bottom row to sit level in the bowl (a Cherry-style
 //               tall, forward-tilted bottom row). Set 0 to leave it at row-4 height.
 // legend_size : legend font size (mm). Default 4.
+// font        : main text font (letters, numbers, words). Must be installed.
+// symbol_font : font for the symbols a text font may lack (⌘⌥⌃⇧⇥⇪↩⌫⌦⌧◀▶ + arrows).
+//               Defaults to the main `font` -- fine for a complete font like
+//               Inter. For a text-only font (e.g. National Park), point it at a
+//               symbol-capable font: symbol_font="DejaVu Sans Mono".
+// rare_font   : font for the two glyphs even Inter lacks -- ⎙ (print screen) and
+//               ☰ (menu). Defaults to FreeMono, which has both. Only those two
+//               keys use it, so the rest of the board stays in `font`.
 // The two 2u spacebars come from the width-2 cells; layout() gives them a
 // stabilizer automatically. Legends on them are blank.
-module superlyra_default(profile = "dsa", sculpt = false, legend_size = 4, bottom_row = 4, bottom_raise = 2, sls = false) {
+module superlyra_default(profile = "dsa", sculpt = false, legend_size = 4, bottom_row = 4, bottom_raise = 2, sls = false, font = "DejaVu Sans Mono", symbol_font = undef, rare_font = "FreeMono") {
   $font_size = legend_size;
+  $font = font;                    // main text font (letters/numbers/words)
+  $sl_symbol_font = is_undef(symbol_font) ? font : symbol_font;   // symbols: follow font unless overridden
+  $sl_rare_font = rare_font;       // ⎙ / ☰ -- glyphs even the symbol font may lack
   // sls: true -> disable stem supports (SLS powder bed self-supports) + nylon slop.
   $stem_support_type = sls ? "disable" : $stem_support_type;
   $stem_slop         = sls ? 0.15      : $stem_slop;
