@@ -12,6 +12,8 @@ include <layouts/kiwi36/default.scad>
 
 include <layouts/mountain_breeze/default.scad>
 
+include <layouts/superlyra/default.scad>
+
 include <layouts/project_zen/default.scad>
 
 include <layouts/60_percent/default.scad>
