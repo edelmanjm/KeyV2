@@ -149,11 +149,8 @@ module mb_main_key(spec) {
 // symbols     : true (default) -> Mac symbol glyphs (via symbol_font). false ->
 //             render them as text words in the main font, so a symbol-less font
 //             like National Park needs no fallback at all.
-module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, thumb_raise = 0, column_sculpt = "disable", legend_size = 3.6, sls = false, font = undef, symbol_font = undef, symbols = true, legends = true, stem = "cherry") {
+module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, thumb_raise = 0, column_sculpt = "disable", legend_size = 3.6, font = undef, symbol_font = undef, symbols = true, legends = true, stem = "cherry") {
   $double_sculpted = (column_sculpt != "disable");
-  // sls: true -> disable stem supports (SLS powder bed self-supports) + nylon slop.
-  $stem_support_type = sls ? "disable" : $stem_support_type;
-  $stem_slop         = sls ? 0.15      : $stem_slop;
   $font_size = legend_size;   // smaller lettering than the stock default of 6
   $font = is_undef(font) ? $font : font;                  // undef = keep KeyV2's stock font
   $mb_symbol_font = is_undef(symbol_font) ? $font : symbol_font;

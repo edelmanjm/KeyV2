@@ -11,12 +11,17 @@ include <./includes.scad>
 // Keycaps for a board. Press F5 to preview, F6 to render.
 $fn = 32; // preview resolution; bump to 64+ before F6 for a smooth render.
 
+// Wrap a board in a print-process preset (from src/print_profiles.scad):
+//   sla_print(stem_slop, stem_inner_slop)  -- resin; tune the slops, test-fit ONE cap
+//   sls_print(stem_slop)                   -- nylon SLS
+//   (no wrapper)                           -- stock FDM tines + slop
+// Tuning: print `dsa_row(3) box_cherry() key();` inside the wrapper, adjust, repeat.
 
+// lily58_default("dsa", font="National Park:style=Regular", stem="box_cherry");
 
-// lily58_default("dsa", font="National Park:style=Regular", stem="box_cherry", sls=true);
-
-// superlyra_default("cherry", sculpt=true, font="Inter:style=Light", legend_size=3.5, sls=true);
-superlyra_default("dsa", sculpt=true, font="Inter:style=Light", legend_size=3.5, stem="box_cherry", sls=true);
+// superlyra_default("cherry", sculpt=true, font="Inter:style=Light", legend_size=3.5);
+sla_print(stem_slop=0.08, stem_inner_slop=0.08)
+  superlyra_default("dsa", sculpt=true, font="Inter:style=Light", legend_size=3.5, stem="box_cherry");
 
 // Tom Hightower
 // mountain_breeze_default("dsa", sculpt=false, legends=false);

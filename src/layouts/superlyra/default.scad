@@ -129,16 +129,13 @@ module sl_main_key(spec) {
 // stem        : "cherry" (default) or "box_cherry" for Kailh Box switches.
 // The two 2u spacebars come from the width-2 cells; layout() gives them a
 // stabilizer automatically. Legends on them are blank.
-module superlyra_default(profile = "dsa", sculpt = false, legend_size = 4, bottom_row = 4, bottom_raise = 2, sls = false, font = "DejaVu Sans Mono", symbol_font = undef, rare_font = "FreeMono", legends = true, stem = "cherry") {
+module superlyra_default(profile = "dsa", sculpt = false, legend_size = 4, bottom_row = 4, bottom_raise = 2, font = "DejaVu Sans Mono", symbol_font = undef, rare_font = "FreeMono", legends = true, stem = "cherry") {
   $font_size = legend_size;
   $font = font;                    // main text font (letters/numbers/words)
   $sl_symbol_font = is_undef(symbol_font) ? font : symbol_font;   // symbols: follow font unless overridden
   $sl_rare_font = rare_font;       // ⎙ / ☰ -- glyphs even the symbol font may lack
   $sl_blank = !legends;            // blank caps (no legends) when legends=false
   $sl_stem = stem;                 // "cherry" or "box_cherry" (Kailh Box)
-  // sls: true -> disable stem supports (SLS powder bed self-supports) + nylon slop.
-  $stem_support_type = sls ? "disable" : $stem_support_type;
-  $stem_slop         = sls ? 0.15      : $stem_slop;
 
   // Top four rows (number / QWERTY / home / bottom-alpha). Sculpting maps them
   // to profile rows 1-4.

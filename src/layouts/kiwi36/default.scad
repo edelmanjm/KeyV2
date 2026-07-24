@@ -36,11 +36,7 @@ kiwi36_legends = [
 // DSA (uniform -- every row the same shape) is recommended for split ergo
 // boards, so that's the default. Pass another name to override.
 // stem: "cherry" (default) or "box_cherry" for Kailh Box switches.
-module kiwi36_default(profile = "dsa", sls = false, stem = "cherry") {
-  // sls: true -> disable stem supports (SLS's powder bed is self-supporting) and
-  // use a nylon-friendly stem slop. Default false keeps KeyV2's FDM tines/slop.
-  $stem_support_type = sls ? "disable" : $stem_support_type;
-  $stem_slop         = sls ? 0.15      : $stem_slop;
+module kiwi36_default(profile = "dsa", stem = "cherry") {
   $ki_stem = stem;
   layout(
     kiwi36_layout,

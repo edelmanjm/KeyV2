@@ -84,14 +84,11 @@ module ly_main_key(spec) {
 // stem        : "cherry" (default) or "box_cherry" for Kailh Box switches.
 // font        : legend font family (must be installed / fontconfig-visible), e.g.
 //               "Routed Gothic", "National Park", "Inter". Default is KeyV2's.
-module lily58_default(profile = "dsa", sculpt = false, legend_size = 4, thumb_row = 3, font = "DejaVu Sans Mono", sls = false, legends = true, stem = "cherry") {
+module lily58_default(profile = "dsa", sculpt = false, legend_size = 4, thumb_row = 3, font = "DejaVu Sans Mono", legends = true, stem = "cherry") {
   $font_size = legend_size;
   $font = font;
   $ly_blank = !legends;   // blank caps (no legends) when legends=false
   $ly_stem = stem;        // "cherry" or "box_cherry" (Kailh Box)
-  // sls: true -> disable stem supports (SLS powder bed self-supports) + nylon slop.
-  $stem_support_type = sls ? "disable" : $stem_support_type;
-  $stem_slop         = sls ? 0.15      : $stem_slop;
 
   // Main grid, rows 0-3 (number / QWERTY / home / bottom-alpha + the [ ] extras).
   layout(
