@@ -10,24 +10,22 @@ include <./includes.scad>
 
 // Keycaps for a board. Press F5 to preview, F6 to render.
 $fn = 32; // preview resolution; bump to 64+ before F6 for a smooth render.
-mountain_breeze_default("dsa", sculpt=true, thumb_raise=1.5) key();
-// kiwi36_default("dsa") key();
 
-// --- other examples (uncomment to use) ---
 
-// example key
-/* layout = [
-  [1, 1, 1, 1, 1],
-  [1, 1, 1, 1, 1],
-  [1, 1, 1, 1, 1],
-  [1, 1, 1.5]
-];
-key(); */
 
-// example row
-/* for (x = [0:1:4]) {
-  translate_u(0,-x) dcs_row(x) key();
-} */
+// lily58_default("dsa", font="National Park:style=Regular", stem="box_cherry", sls=true);
 
-// example layout
-/* preonic_default("dcs") key(); */
+// superlyra_default("cherry", sculpt=true, font="Inter:style=Light", legend_size=3.5, sls=true);
+superlyra_default("dsa", sculpt=true, font="Inter:style=Light", legend_size=3.5, stem="box_cherry", sls=true);
+
+// Tom Hightower
+// mountain_breeze_default("dsa", sculpt=false, legends=false);
+// Xinyuan Zhao
+// mountain_breeze_default("dsa", sculpt=false, font="Inter");
+// Jonathan Edelman
+// mountain_breeze_default("cherry", sculpt=true, thumb_raise=1.5, font="Inter");
+// mountain_breeze_default("dsa", sculpt=true, thumb_raise=1.5, font="Inter");
+
+
+// mountain_breeze_default("dsa", sculpt=true, thumb_raise=1.5, font="National Park", symbols=false);
+// kiwi36_default("dsa");

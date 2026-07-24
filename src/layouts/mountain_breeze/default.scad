@@ -105,6 +105,7 @@ function mb_size_for(s) = let(d = mb_disp(s)) $font_size * (len(d) > 1 ? 0.8 : 1
 // Apply one main-block legend cell. String -> single centered legend (glyph or
 // word per the mode, in the right font); [lower, upper] pair -> two stacked.
 module mb_main_key(spec) {
+  $stem_type = $mb_stem;                            // override layout()'s hardcoded cherry()
   if ($mb_blank) {
     key();                                          // blank cap, no legend
   } else if (is_list(spec)) {
@@ -143,10 +144,12 @@ module mb_main_key(spec) {
 //             Defaults to the main `font` (fine for a complete font like Inter);
 //             for a text-only font (National Park) set e.g. "DejaVu Sans Mono".
 // legends     : true (default) -> render legends. false -> blank caps (no legends).
+// stem        : "cherry" (default) or "box_cherry" for Kailh Box switches (Box Jade,
+//             Akko box) whose housing hits the standard cherry stem.
 // symbols     : true (default) -> Mac symbol glyphs (via symbol_font). false ->
 //             render them as text words in the main font, so a symbol-less font
 //             like National Park needs no fallback at all.
-module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, thumb_raise = 0, column_sculpt = "disable", legend_size = 3.6, sls = false, font = undef, symbol_font = undef, symbols = true, legends = true) {
+module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, thumb_raise = 0, column_sculpt = "disable", legend_size = 3.6, sls = false, font = undef, symbol_font = undef, symbols = true, legends = true, stem = "cherry") {
   $double_sculpted = (column_sculpt != "disable");
   // sls: true -> disable stem supports (SLS powder bed self-supports) + nylon slop.
   $stem_support_type = sls ? "disable" : $stem_support_type;
@@ -156,6 +159,7 @@ module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, t
   $mb_symbol_font = is_undef(symbol_font) ? $font : symbol_font;
   $mb_text = !symbols;        // text-label mode when symbols=false
   $mb_blank = !legends;       // blank caps (no legends) when legends=false
+  $mb_stem = stem;            // "cherry" or "box_cherry" (Kailh Box)
 
   // Main 6x4 blocks (both hands) + the right cluster, rows 0-3. Legends are
   // applied per key from mb_main_legends via $row/$column, so a cell can be a
@@ -179,6 +183,7 @@ module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, t
   for (k = mb_bottom_1u) {
     translate_u(k[0], -4) key_profile(profile, thumb_row) legend(mb_disp(k[1]), [0,0], mb_size_for(k[1]), mb_font_for(k[1])) cherry() {
       $total_depth = $total_depth + thumb_raise;
+      $stem_type = $mb_stem;
       if ($children) children(); else key();
     }
   }
@@ -188,6 +193,7 @@ module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, t
   for (t = mb_thumbs) {
     translate_u(t[0], -4) key_profile(profile, thumb_row) u(2) stabilized() legend(mb_disp(t[1]), [0,0], mb_size_for(t[1]), mb_font_for(t[1])) cherry() {
       $total_depth = $total_depth + thumb_raise;
+      $stem_type = $mb_stem;
       if ($children) children(); else key();
     }
   }

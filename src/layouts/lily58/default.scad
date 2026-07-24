@@ -60,6 +60,7 @@ ly_main_legends = [
 // Apply one legend cell. String -> single centered legend; [lower, upper]
 // pair -> two stacked legends (base + shifted symbol).
 module ly_main_key(spec) {
+  $stem_type = $ly_stem;                // override layout()'s cherry()
   if ($ly_blank) {
     key();                              // blank cap, no legend
   } else if (is_list(spec)) {
@@ -80,12 +81,14 @@ module ly_main_key(spec) {
 //               to profile rows 1-4; thumbs are pinned to thumb_row.
 // thumb_row   : profile row for the thumb keys when sculpting (default 3 = flat).
 // legend_size : legend font size (mm).
+// stem        : "cherry" (default) or "box_cherry" for Kailh Box switches.
 // font        : legend font family (must be installed / fontconfig-visible), e.g.
 //               "Routed Gothic", "National Park", "Inter". Default is KeyV2's.
-module lily58_default(profile = "dsa", sculpt = false, legend_size = 4, thumb_row = 3, font = "DejaVu Sans Mono", sls = false, legends = true) {
+module lily58_default(profile = "dsa", sculpt = false, legend_size = 4, thumb_row = 3, font = "DejaVu Sans Mono", sls = false, legends = true, stem = "cherry") {
   $font_size = legend_size;
   $font = font;
   $ly_blank = !legends;   // blank caps (no legends) when legends=false
+  $ly_stem = stem;        // "cherry" or "box_cherry" (Kailh Box)
   // sls: true -> disable stem supports (SLS powder bed self-supports) + nylon slop.
   $stem_support_type = sls ? "disable" : $stem_support_type;
   $stem_slop         = sls ? 0.15      : $stem_slop;
@@ -105,5 +108,5 @@ module lily58_default(profile = "dsa", sculpt = false, legend_size = 4, thumb_ro
     profile,
     row_override = sculpt ? thumb_row : 3,
     column_sculpt_profile = "disable"
-  ) key();
+  ) { $stem_type = $ly_stem; key(); }
 }
