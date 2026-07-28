@@ -10,6 +10,10 @@ include <./includes.scad>
 
 // Keycaps for a board. Press F5 to preview, F6 to render.
 $fn = 32; // preview resolution; bump to 64+ before F6 for a smooth render.
+$inset_legend_depth = 1.0; // engraved-legend depth in mm (stock default 0.2).
+
+sls_print(stem_slop=0.50, stem_inner_slop=0.1)
+// sla_print(stem_slop=1.00, stem_inner_slop=0.32, wall=4)
 
 // Wrap a board in a print-process preset (from src/print_profiles.scad):
 //   sla_print(stem_slop, stem_inner_slop)  -- resin; tune the slops, test-fit ONE cap
@@ -17,11 +21,10 @@ $fn = 32; // preview resolution; bump to 64+ before F6 for a smooth render.
 //   (no wrapper)                           -- stock FDM tines + slop
 // Tuning: print `dsa_row(3) box_cherry() key();` inside the wrapper, adjust, repeat.
 
-// lily58_default("dsa", font="National Park:style=Regular", stem="box_cherry");
+// lily58_default("dsa", font="National Park:style=Bold", stem="box_cherry");
 
-// superlyra_default("cherry", sculpt=true, font="Inter:style=Light", legend_size=3.5);
-sla_print(stem_slop=0.08, stem_inner_slop=0.08)
-  superlyra_default("dsa", sculpt=true, font="Inter:style=Light", legend_size=3.5, stem="box_cherry");
+// superlyra_default("cherry", sculpt=true, font="Inter:style=Bold", legend_size=3.5);
+// superlyra_default("dsa", sculpt=true, font="Inter:style=Bold", legend_size=3.5, stem="box_cherry");
 
 // Tom Hightower
 // mountain_breeze_default("dsa", sculpt=false, legends=false);
@@ -29,7 +32,7 @@ sla_print(stem_slop=0.08, stem_inner_slop=0.08)
 // mountain_breeze_default("dsa", sculpt=false, font="Inter");
 // Jonathan Edelman
 // mountain_breeze_default("cherry", sculpt=true, thumb_raise=1.5, font="Inter");
-// mountain_breeze_default("dsa", sculpt=true, thumb_raise=1.5, font="Inter");
+ mountain_breeze_default("dsa", sculpt=true, thumb_raise=1.5, font="Inter");
 
 
 // mountain_breeze_default("dsa", sculpt=true, thumb_raise=1.5, font="National Park", symbols=false);

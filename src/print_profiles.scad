@@ -22,9 +22,14 @@ module sls_print(stem_slop = 0.15) {
 // starting point to test-fit from.
 //   stem_slop       : outer post size / Box-housing clearance
 //   stem_inner_slop : + cross grip on the switch stem (main retention knob)
-module sla_print(stem_slop = 0.08, stem_inner_slop = 0.08) {
+//   wall            : wall thickness in mm-total (KeyV2 default 3 = 1.5mm walls).
+//                     Raise for a chunkier, more-solid cap that still clears the
+//                     switch. ~7 is about the max on 1u MX; higher closes the
+//                     cavity and kills travel, so test one.
+module sla_print(stem_slop = 0.16, stem_inner_slop = 0.16, wall = undef) {
   $stem_support_type = "disable";
   $stem_slop = stem_slop;
   $stem_inner_slop = stem_inner_slop;
+  $wall_thickness = is_undef(wall) ? $wall_thickness : wall;
   children();
 }
