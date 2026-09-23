@@ -32,7 +32,7 @@ sls_print(stem_slop=0.50, stem_inner_slop=0.1)
 // mountain_breeze_default("dsa", sculpt=false, font="Inter");
 // Jonathan Edelman
 // mountain_breeze_default("cherry", sculpt=true, thumb_raise=1.5, font="Inter");
- mountain_breeze_default("dsa", sculpt=true, thumb_raise=1.5, font="Inter");
+mountain_breeze_default("dsa", sculpt=true, thumb_raise=1.5, font="SF Pro Text");  // SF Pro must be installed locally
 
 
 // mountain_breeze_default("dsa", sculpt=true, thumb_raise=1.5, font="National Park", symbols=false);

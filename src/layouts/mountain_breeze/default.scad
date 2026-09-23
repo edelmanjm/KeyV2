@@ -16,6 +16,11 @@ include <../layout.scad>
 // or thumb splay. That has no effect on the printed caps.
 // =====================================================================
 
+// Legends are written as plain words ("tab", "vol+", "cmd"). With symbols=true
+// each word that has an entry in mb_glyphs (below the tables) is drawn as that
+// glyph; with symbols=false the word itself is engraved. Anything not in the
+// map -- letters, digits, "esc", "fn", the arrows -- is drawn as written.
+
 // ---------------------------------------------------------------------
 // CONFIG: right-hand cluster legends. Uncomment exactly ONE line.
 // Numpad and arrows are the SAME twelve 1u caps -- only legends differ.
@@ -25,16 +30,16 @@ mb_cluster_mode = "arrows";     // arrow keys + the symbols  - = ` [ ] \
 
 // The two cluster legend sets (4 rows x 3 columns each).
 mb_cluster_arrows = [
-  [["+","="], "*", "▲"],   // left +/=, center *, right volume up
-  [["-","_"], "/", "▼"],   // left -/_, center /, right volume down
-  ["\\",      "↑", "⇪"],   // center ↑, right caps (moved into the blank spot)
+  [["+","="], "*", "vol+"],   // left +/=, center *, right volume up
+  [["-","_"], "/", "vol-"],   // left -/_, center /, right volume down
+  ["\\",      "↑", "caps"],   // center ↑, right caps (moved into the blank spot)
   ["←",       "↓", "→"]
 ];
 mb_cluster_numpad = [
   ["7", "8", "9"],
   ["4", "5", "6"],
   ["1", "2", "3"],
-  ["0", ".", "="]
+  ["0", ".", "enter"]   // Enter in the numpad's bottom-right slot
 ];
 mb_cluster = (mb_cluster_mode == "numpad") ? mb_cluster_numpad : mb_cluster_arrows;
 
@@ -56,23 +61,46 @@ mb_main_rows = [mb_main_row, mb_main_row, mb_main_row, mb_main_row];  // rows 0-
 mb_left_main = [                       // 4 rows x 6 cols (outer mod column first)
   ["esc",   ["1","!"], ["2","@"], ["3","#"], ["4","$"], ["5","%"]],
   [["`","~"], "Q", "W", "E", "R", "T"],  // grave/tilde (was Tab)
-  ["⇥",       "A", "S", "D", "F", "G"],  // Tab (was Ctrl)
-  ["⇧",       "Z", "X", "C", "V", "B"]   // Shift
+  ["tab",     "A", "S", "D", "F", "G"],  // Tab (was Ctrl)
+  ["shift",   "Z", "X", "C", "V", "B"]   // Shift
 ];
 mb_right_main = [                      // 4 rows x 6 cols (inner column last)
   [["6","^"], ["7","&"], ["8","*"], ["9","("], ["0",")"], ["[","{"]],
   ["Y", "U", "I", "O", "P", ["]","}"]],
   ["H", "J", "K", "L", [";",":"], ["'","\""]],
-  ["N", "M", [",","<"], [".",">"], ["/","?"], "⇧"]
+  ["N", "M", [",","<"], [".",">"], ["/","?"], "shift"]
 ];
-mb_win = "⌘";   // Super/Command glyph used in the left bottom-row cluster
+mb_win = "cmd";   // Super/Command key in the left bottom-row cluster
 
 // Bottom-row (thumb) clusters. Left: Option / Control / Super. Right: Backspace
 // / Delete / fn.
-mb_left_bottom  = ["⌥", "⌃", mb_win];   // Alt(Option) / Control / Super
-mb_right_bottom = ["⌫", "⌦", "fn"];     // Backspace / Delete / fn
-mb_left_thumb   = "";        // space left blank, per request
-mb_right_thumb  = "↩";       // Enter / Return
+mb_left_bottom  = ["alt", "ctrl", mb_win];   // Alt(Option) / Control / Super
+mb_right_bottom = ["enter", "fn", ""];   // Return / fn / (blank)
+mb_left_thumb   = "bksp";     // Backspace
+mb_right_thumb  = "";       // space left blank, per request
+
+// Front (side) legends: the layer-1 function of each key, engraved on the
+// front face of the cap. Same shapes as the top-legend tables; "" = none.
+mb_left_front = [                      // 4 rows x 6 cols
+  ["", "",     "",     "",     "",     ""],
+  ["", "bri-", "bri+", "mute", "vol-", "vol+"],
+  ["", "",     "",     "",     "",     ""],
+  ["caps", "", "", "", "", ""]    // caps lock on the front of left shift
+];
+mb_right_front = [                     // 4 rows x 6 cols
+  ["",      "",     "",    "",     "",     ""],
+  ["PrtSc", "mctl", "rwd", "play", "ffwd", "pwr"],   // print screen, mission control, rewind, play/pause, fast-forward, power (on ])
+  ["",      "",     "",    "",     "",     ""],
+  ["", "", "", "", "", "caps"]   // caps lock on the front of right shift
+];
+// Right cluster front legends: the numpad (7-8-9 on top, 0 . = at the bottom)
+// when the top legends are the arrow set; nothing when the numpad is already
+// on top.
+mb_cluster_front = (mb_cluster_mode == "numpad") ? [["","",""], ["","",""], ["","",""], ["","",""]] : mb_cluster_numpad;
+mb_left_bottom_front  = ["", "", ""];
+mb_right_bottom_front = ["", "", ""];
+mb_left_thumb_front   = "del";   // Delete
+mb_right_thumb_front  = "";
 
 // Assemble the main-block legends to match its shape.
 //   Main rows 0-3: 6 left main | gap | 6 right main | gap | 3 cluster = 17
@@ -83,37 +111,72 @@ mb_main_legends = [
   concat(mb_left_main[2], [""], mb_right_main[2], [""], mb_cluster[2]),
   concat(mb_left_main[3], [""], mb_right_main[3], [""], mb_cluster[3])
 ];
-
-// Symbols the main text font may lack (Mac modifiers, arrows, volume triangles)
-// render in $mb_symbol_font; everything else uses the main $font.
-mb_symbol_glyphs = ["⌘","⌥","⌃","⇧","⇥","⇪","↩","⌫","⌦","▲","▼","←","↑","↓","→"];
-function mb_is_symbol(s) = len([for (g = mb_symbol_glyphs) if (g == s) 1]) > 0;
-
-// Text-label mode ($mb_text, from `symbols=false`): render symbol glyphs as
-// words so a symbol-less text font (National Park) can draw the whole board in
-// one font. Arrows stay glyphs (National Park has ←↑↓→); only the Mac keys and
-// the volume triangles become words.
-mb_symbol_text = [
-  ["⌘","cmd"], ["⌥","alt"], ["⌃","ctrl"], ["⇧","shift"], ["⇥","tab"], ["⇪","caps"],
-  ["↩","enter"], ["⌫","bksp"], ["⌦","del"], ["▲","vol+"], ["▼","vol-"]
+mb_main_front = [
+  concat(mb_left_front[0], [""], mb_right_front[0], [""], mb_cluster_front[0]),
+  concat(mb_left_front[1], [""], mb_right_front[1], [""], mb_cluster_front[1]),
+  concat(mb_left_front[2], [""], mb_right_front[2], [""], mb_cluster_front[2]),
+  concat(mb_left_front[3], [""], mb_right_front[3], [""], mb_cluster_front[3])
 ];
-function mb_label(s)    = let(m = [for (p = mb_symbol_text) if (p[0]==s) p[1]]) len(m) > 0 ? m[0] : s;
-function mb_disp(s)     = $mb_blank ? "" : ($mb_text ? mb_label(s) : s);       // display string ("" = blank)
-function mb_font_for(s) = $mb_text ? $font : (mb_is_symbol(s) ? $mb_symbol_font : $font);
-function mb_size_for(s) = let(d = mb_disp(s)) $font_size * (len(d) > 1 ? 0.8 : 1);   // words shrink uniformly
+
+// Word -> glyph map for symbols=true. Plain Unicode glyphs (Mac modifiers,
+// arrows) draw from $mb_symbol_font; SF Symbols -- Apple's own keycap glyphs,
+// which live in SF Pro at private-use codepoints U+100000+ -- always draw from
+// SF Pro, so glyph mode needs it installed locally (developer.apple.com/fonts;
+// not redistributable). The arrows map to themselves so they still route to the
+// symbol font. Words with no entry are engraved as written in both modes.
+mb_sf_font = "SF Pro Text";
+mb_glyphs = [
+  ["cmd",   "⌘"], ["alt",   "⌥"], ["ctrl",  "⌃"], ["shift", "⇧"], ["caps", "⇪"],
+  ["bksp",  "⌫"], ["del",   "⌦"],
+  ["←","←"], ["↑","↑"], ["↓","↓"], ["→","→"],
+  ["tab",   chr(0x100142)],   // arrow.right.to.line (SF Pro has no plain ⇥)
+  ["enter", chr(0x100147)],   // return              (SF Pro has no plain ↩)
+  ["bri-",  chr(0x1001AC)],   // sun.min.fill
+  ["bri+",  chr(0x1001AE)],   // sun.max.fill
+  ["vol+",  chr(0x1002A9)],   // speaker.wave.3.fill
+  ["vol-",  chr(0x1002A5)],   // speaker.wave.1.fill
+  ["mute",  chr(0x1002A3)],   // speaker.slash.fill
+  ["PrtSc", chr(0x1003BC)],   // camera.viewfinder (0x10031F camera.fill is bolder)
+  ["mctl",  chr(0x1001F4)],   // rectangle.3.group (Mission Control)
+  ["rwd",   chr(0x100289)],   // backward  (0x10028A backward.fill is heavier)
+  ["play",  chr(0x100287)],   // playpause (0x100288 playpause.fill)
+  ["ffwd",  chr(0x10028B)],   // forward   (0x10028C forward.fill)
+  ["pwr",   "⏻"]              // Unicode U+23FB in SF Pro: same stroke as the SF power symbol (0x1001A8) but cap-height sized, not 1.45x
+];
+function mb_glyph(w)    = let(m = [for (p = mb_glyphs) if (p[0] == w) p[1]]) len(m) > 0 ? m[0] : undef;
+function mb_is_sf(g)    = is_string(g) && len(g) > 0 && ord(g[0]) >= 1048576;
+// What gets engraved: "" when blank, the word in text mode, else its glyph if it has one.
+function mb_disp(s)     = $mb_blank ? "" : (($mb_text || is_undef(mb_glyph(s))) ? s : mb_glyph(s));
+function mb_font_for(s) = let(g = mb_glyph(s)) ($mb_text || is_undef(g)) ? $font : (mb_is_sf(g) ? mb_sf_font : $mb_symbol_font);
+// Size factor: SF Symbols get icon_scale; multi-character words shrink to 0.8x.
+function mb_scale_for(s) = let(d = mb_disp(s)) mb_is_sf(d) ? $mb_icon_scale : (len(d) > 1 ? 0.8 : 1);
+function mb_size_for(s)       = $font_size * mb_scale_for(s);
+function mb_front_size_for(s) = $mb_front_size * mb_scale_for(s);
+
+// Wrap children in a front-face legend when `spec` is non-empty and front
+// legends are enabled; otherwise pass them through untouched. Uses the same
+// glyph/word/blank handling and engraving depth as the top legends.
+module mb_front(spec) {
+  d = ($mb_front && !is_undef(spec)) ? mb_disp(spec) : "";
+  if (d == "") children();
+  else front_legend(d, [0, 0], mb_front_size_for(spec), mb_font_for(spec)) children();
+}
 
 // Apply one main-block legend cell. String -> single centered legend (glyph or
 // word per the mode, in the right font); [lower, upper] pair -> two stacked.
-module mb_main_key(spec) {
+// `front` is the matching cell of mb_main_front (see mb_front).
+module mb_main_key(spec, front = "") {
   $stem_type = $mb_stem;                            // override layout()'s hardcoded cherry()
-  if ($mb_blank) {
-    key();                                          // blank cap, no legend
-  } else if (is_list(spec)) {
-    legend(spec[0], [0,  0.8], $font_size * 0.8)    // lower: number
-      legend(spec[1], [0, -0.8], $font_size * 0.8)  // upper: shifted symbol
-        key();
-  } else {
-    legend(mb_disp(spec), [0, 0], mb_size_for(spec), mb_font_for(spec)) key();
+  mb_front(front) {
+    if ($mb_blank) {
+      key();                                          // blank cap, no legend
+    } else if (is_list(spec)) {
+      legend(spec[0], [0,  0.8], $font_size * 0.8)    // lower: number
+        legend(spec[1], [0, -0.8], $font_size * 0.8)  // upper: shifted symbol
+          key();
+    } else {
+      legend(mb_disp(spec), [0, 0], mb_size_for(spec), mb_font_for(spec)) key();
+    }
   }
 }
 
@@ -139,23 +202,34 @@ module mb_main_key(spec) {
 //             -ish lettering; KeyV2's stock default is a chunky 6. Stacked symbol
 //             pairs are drawn at 0.8x this.
 // font        : main text font. undef (default) keeps KeyV2's stock font; else a
-//             named family (must be installed), e.g. "Inter", "National Park".
-// symbol_font : font for the symbols the text font may lack (⌘⌥⌃⇧⇥⇪↩⌫⌦ ▲▼ arrows).
-//             Defaults to the main `font` (fine for a complete font like Inter);
-//             for a text-only font (National Park) set e.g. "DejaVu Sans Mono".
+//             named family (must be installed), e.g. "SF Pro Text", "Inter".
+// symbol_font : font for the plain-Unicode glyphs in mb_glyphs (⌘⌥⌃⇧⇪⌫⌦ and the
+//             arrows). Defaults to the main `font`; for a text-only font
+//             (National Park) set e.g. "DejaVu Sans Mono". The SF Symbols in
+//             mb_glyphs always come from SF Pro regardless.
+// symbols     : true (default) -> words with an entry in mb_glyphs are drawn as
+//             that glyph. false -> the words themselves are engraved, all in the
+//             main font, so neither a symbol font nor SF Pro is needed.
 // legends     : true (default) -> render legends. false -> blank caps (no legends).
-// stem        : "cherry" (default) or "box_cherry" for Kailh Box switches (Box Jade,
-//             Akko box) whose housing hits the standard cherry stem.
-// symbols     : true (default) -> Mac symbol glyphs (via symbol_font). false ->
-//             render them as text words in the main font, so a symbol-less font
-//             like National Park needs no fallback at all.
-module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, thumb_raise = 0, column_sculpt = "disable", legend_size = 3.6, font = undef, symbol_font = undef, symbols = true, legends = true, stem = "cherry") {
+// front_legends : true (default) -> also engrave the layer-1 legends (mb_*_front)
+//             on the front face of each cap. false -> top legends only. Always
+//             off when legends=false.
+// front_legend_size : font size (mm) for the front legends. Default = legend_size,
+//             so a glyph shared between faces (⌫ on top, ⌦ on the front of the
+//             same thumb) prints at one size. Multi-character words shrink 0.8x.
+// icon_scale  : SF Symbol size relative to the legend size (default 0.88), tuned
+//             so the icons sit visually level with the letters while fitting the
+//             short front face.
+module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, thumb_raise = 0, column_sculpt = "disable", legend_size = 3.6, font = undef, symbol_font = undef, symbols = true, legends = true, front_legends = true, front_legend_size = undef, icon_scale = 0.8, stem = "cherry") {
   $double_sculpted = (column_sculpt != "disable");
   $font_size = legend_size;   // smaller lettering than the stock default of 6
   $font = is_undef(font) ? $font : font;                  // undef = keep KeyV2's stock font
   $mb_symbol_font = is_undef(symbol_font) ? $font : symbol_font;
   $mb_text = !symbols;        // text-label mode when symbols=false
   $mb_blank = !legends;       // blank caps (no legends) when legends=false
+  $mb_front = legends && front_legends;   // front-face (layer-1) legends
+  $mb_front_size = is_undef(front_legend_size) ? legend_size : front_legend_size;
+  $mb_icon_scale = icon_scale;            // SF Symbol size vs. letters
   $mb_stem = stem;            // "cherry" or "box_cherry" (Kailh Box)
 
   // Main 6x4 blocks (both hands) + the right cluster, rows 0-3. Legends are
@@ -167,18 +241,19 @@ module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, t
     row_override = sculpt ? undef : 3,   // uniform: pin row 3; sculpt: use offset
     row_sculpting_offset = sculpt ? 1 : 0,
     column_sculpt_profile = column_sculpt
-  ) mb_main_key(mb_main_legends[$row][$column]);
+  ) mb_main_key(mb_main_legends[$row][$column], mb_main_front[$row][$column]);
 
   // --- Thumb cluster, placed directly at y=-4 -----------------------------
   // Pinned to thumb_row and lifted by thumb_raise mm. x-positions match the
   // old bottom-row array [-1,1,1,1,-5,1,1,1]: left keys at 1.5/2.5/3.5, right
   // at 9.5/10.5/11.5, and the 2u thumbs inboard at 5 and 8.
+  // Each entry: [x, top legend, front legend].
   mb_bottom_1u = [
-    [1.5, mb_left_bottom[0]],  [2.5,  mb_left_bottom[1]],  [3.5,  mb_left_bottom[2]],
-    [9.5, mb_right_bottom[0]], [10.5, mb_right_bottom[1]], [11.5, mb_right_bottom[2]]
+    [1.5, mb_left_bottom[0],  mb_left_bottom_front[0]],  [2.5,  mb_left_bottom[1],  mb_left_bottom_front[1]],  [3.5,  mb_left_bottom[2],  mb_left_bottom_front[2]],
+    [9.5, mb_right_bottom[0], mb_right_bottom_front[0]], [10.5, mb_right_bottom[1], mb_right_bottom_front[1]], [11.5, mb_right_bottom[2], mb_right_bottom_front[2]]
   ];
   for (k = mb_bottom_1u) {
-    translate_u(k[0], -4) key_profile(profile, thumb_row) legend(mb_disp(k[1]), [0,0], mb_size_for(k[1]), mb_font_for(k[1])) cherry() {
+    translate_u(k[0], -4) key_profile(profile, thumb_row) mb_front(k[2]) legend(mb_disp(k[1]), [0,0], mb_size_for(k[1]), mb_font_for(k[1])) cherry() {
       $total_depth = $total_depth + thumb_raise;
       $stem_type = $mb_stem;
       if ($children) children(); else key();
@@ -186,9 +261,9 @@ module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, t
   }
 
   // The two 2u thumbs: 2u caps with stabilizer support, inboard of each hand.
-  mb_thumbs = [[5, mb_left_thumb], [8, mb_right_thumb]];
+  mb_thumbs = [[5, mb_left_thumb, mb_left_thumb_front], [8, mb_right_thumb, mb_right_thumb_front]];
   for (t = mb_thumbs) {
-    translate_u(t[0], -4) key_profile(profile, thumb_row) u(2) stabilized() legend(mb_disp(t[1]), [0,0], mb_size_for(t[1]), mb_font_for(t[1])) cherry() {
+    translate_u(t[0], -4) key_profile(profile, thumb_row) u(2) stabilized() mb_front(t[2]) legend(mb_disp(t[1]), [0,0], mb_size_for(t[1]), mb_font_for(t[1])) cherry() {
       $total_depth = $total_depth + thumb_raise;
       $stem_type = $mb_stem;
       if ($children) children(); else key();
