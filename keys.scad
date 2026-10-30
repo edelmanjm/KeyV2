@@ -9,11 +9,11 @@ include <./includes.scad>
 
 
 // Keycaps for a board. Press F5 to preview, F6 to render.
-$fn = 32; // preview resolution; bump to 64+ before F6 for a smooth render.
-$inset_legend_depth = 1.0; // engraved-legend depth in mm (stock default 0.2).
+$fn = 128; // preview resolution; bump to 64+ before F6 for a smooth render.
+$inset_legend_depth = 0.5; // engraved-legend depth in mm (stock default 0.2).
 
-sls_print(stem_slop=0.50, stem_inner_slop=0.1)
-// sla_print(stem_slop=1.00, stem_inner_slop=0.32, wall=4)
+// sls_print(stem_slop=0.50, stem_inner_slop=0.1)
+sla_print(stem_slop=1.00, stem_inner_slop=0.08, wall=4)
 
 // Wrap a board in a print-process preset (from src/print_profiles.scad):
 //   sla_print(stem_slop, stem_inner_slop)  -- resin; tune the slops, test-fit ONE cap

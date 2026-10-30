@@ -32,7 +32,7 @@ mb_cluster_mode = "arrows";     // arrow keys + the symbols  - = ` [ ] \
 mb_cluster_arrows = [
   [["+","="], "*", "vol+"],   // left +/=, center *, right volume up
   [["-","_"], "/", "vol-"],   // left -/_, center /, right volume down
-  ["\\",      "↑", "caps"],   // center ↑, right caps (moved into the blank spot)
+  [["\\","|"], "↑", "out"],   // left \/|, center ↑, right ZMK output toggle (USB <-> Bluetooth)
   ["←",       "↓", "→"]
 ];
 mb_cluster_numpad = [
@@ -75,17 +75,19 @@ mb_win = "cmd";   // Super/Command key in the left bottom-row cluster
 // Bottom-row (thumb) clusters. Left: Option / Control / Super. Right: Backspace
 // / Delete / fn.
 mb_left_bottom  = ["alt", "ctrl", mb_win];   // Alt(Option) / Control / Super
-mb_right_bottom = ["enter", "fn", ""];   // Return / fn / (blank)
+mb_right_bottom = ["enter", "fn", ["fn", "lock"]];   // Return / fn / fn-toggle (fn with a padlock above)
 mb_left_thumb   = "bksp";     // Backspace
 mb_right_thumb  = "";       // space left blank, per request
 
 // Front (side) legends: the layer-1 function of each key, engraved on the
-// front face of the cap. Same shapes as the top-legend tables; "" = none.
+// front face of the cap. Same shapes as the top-legend tables; "" = none. A
+// cell may also be a [left, right] pair -> two legends side by side (used for
+// the Bluetooth keys: logo + modifier).
 mb_left_front = [                      // 4 rows x 6 cols
-  ["", "",     "",     "",     "",     ""],
-  ["", "bri-", "bri+", "mute", "vol-", "vol+"],
-  ["", "",     "",     "",     "",     ""],
-  ["caps", "", "", "", "", ""]    // caps lock on the front of left shift
+  ["",          "",         "",         "",         "",         ""],
+  [["bt","›"],  "bri-",     "bri+",     "mute",     "vol-",     "vol+"],      // ` = next BT profile
+  [["bt","‹"],  ["bt","1"], ["bt","2"], ["bt","3"], ["bt","4"], ["bt","5"]],  // tab = previous BT profile, A-G = select profile 1-5
+  ["btclr",     "",         "",         "",         "",         ""]           // shift = clear BT profile (caps is on the right shift)
 ];
 mb_right_front = [                     // 4 rows x 6 cols
   ["",      "",     "",    "",     "",     ""],
@@ -124,7 +126,11 @@ mb_main_front = [
 // SF Pro, so glyph mode needs it installed locally (developer.apple.com/fonts;
 // not redistributable). The arrows map to themselves so they still route to the
 // symbol font. Words with no entry are engraved as written in both modes.
+// An entry may name a third item, the font to draw that glyph from; this is
+// how the Bluetooth logo comes in, since SF Symbols omits it (trademark) and
+// no installed font has it as plain Unicode. Any Nerd Font carries it.
 mb_sf_font = "SF Pro Text";
+mb_bt_font = "JetBrainsMono Nerd Font";
 mb_glyphs = [
   ["cmd",   "⌘"], ["alt",   "⌥"], ["ctrl",  "⌃"], ["shift", "⇧"], ["caps", "⇪"],
   ["bksp",  "⌫"], ["del",   "⌦"],
@@ -141,43 +147,57 @@ mb_glyphs = [
   ["rwd",   chr(0x100289)],   // backward  (0x10028A backward.fill is heavier)
   ["play",  chr(0x100287)],   // playpause (0x100288 playpause.fill)
   ["ffwd",  chr(0x10028B)],   // forward   (0x10028C forward.fill)
-  ["pwr",   "⏻"]              // Unicode U+23FB in SF Pro: same stroke as the SF power symbol (0x1001A8) but cap-height sized, not 1.45x
+  ["lock",  chr(0x1003A0)],   // lock (outline; 0x1003A1 lock.fill)
+  ["out",   chr(0x10014C)],   // arrow.triangle.2.circlepath -- ZMK output toggle
+  ["pwr",   "⏻"],             // Unicode U+23FB in SF Pro: same stroke as the SF power symbol (0x1001A8) but cap-height sized, not 1.45x
+  ["bt",    chr(0xF00AF), mb_bt_font],   // Nerd Font md-bluetooth (logo)
+  ["btclr", chr(0xF00B2), mb_bt_font]    // Nerd Font md-bluetooth_off (slashed logo) = clear profile
 ];
-function mb_glyph(w)    = let(m = [for (p = mb_glyphs) if (p[0] == w) p[1]]) len(m) > 0 ? m[0] : undef;
-function mb_is_sf(g)    = is_string(g) && len(g) > 0 && ord(g[0]) >= 1048576;
+function mb_entry(w)    = let(m = [for (p = mb_glyphs) if (p[0] == w) p]) len(m) > 0 ? m[0] : undef;
+function mb_glyph(w)    = let(e = mb_entry(w)) is_undef(e) ? undef : e[1];
+// Icon-font glyphs (SF Symbols at U+100000+, Nerd Font at U+F0000+) vs. plain Unicode.
+function mb_is_icon(g)  = is_string(g) && len(g) > 0 && ord(g[0]) >= 983040;
 // What gets engraved: "" when blank, the word in text mode, else its glyph if it has one.
 function mb_disp(s)     = $mb_blank ? "" : (($mb_text || is_undef(mb_glyph(s))) ? s : mb_glyph(s));
-function mb_font_for(s) = let(g = mb_glyph(s)) ($mb_text || is_undef(g)) ? $font : (mb_is_sf(g) ? mb_sf_font : $mb_symbol_font);
-// Size factor: SF Symbols get icon_scale; multi-character words shrink to 0.8x.
-function mb_scale_for(s) = let(d = mb_disp(s)) mb_is_sf(d) ? $mb_icon_scale : (len(d) > 1 ? 0.8 : 1);
+function mb_font_for(s) = let(e = mb_entry(s))
+                          ($mb_text || is_undef(e)) ? $font
+                          : (len(e) > 2 ? e[2] : (mb_is_icon(e[1]) ? mb_sf_font : $mb_symbol_font));
+// Size factor: icon glyphs get icon_scale; multi-character words shrink to 0.8x.
+function mb_scale_for(s) = let(d = mb_disp(s)) mb_is_icon(d) ? $mb_icon_scale : (len(d) > 1 ? 0.8 : 1);
 function mb_size_for(s)       = $font_size * mb_scale_for(s);
 function mb_front_size_for(s) = $mb_front_size * mb_scale_for(s);
 
-// Wrap children in a front-face legend when `spec` is non-empty and front
-// legends are enabled; otherwise pass them through untouched. Uses the same
-// glyph/word/blank handling and engraving depth as the top legends.
+// Wrap children in a front-face legend (or a side-by-side pair) when `spec` is
+// non-empty and front legends are enabled; otherwise pass them through
+// untouched. Same glyph/word/blank handling and engraving depth as the top.
 module mb_front(spec) {
-  d = ($mb_front && !is_undef(spec)) ? mb_disp(spec) : "";
-  if (d == "") children();
-  else front_legend(d, [0, 0], mb_front_size_for(spec), mb_font_for(spec)) children();
+  if (!$mb_front || is_undef(spec) || spec == "") children();
+  else if (is_list(spec))                                    // [left, right] side by side
+    front_legend(mb_disp(spec[0]), [-0.6, 0], mb_front_size_for(spec[0]), mb_font_for(spec[0]))
+      front_legend(mb_disp(spec[1]), [0.6, 0], mb_front_size_for(spec[1]), mb_font_for(spec[1]))
+        children();
+  else if (mb_disp(spec) == "") children();
+  else front_legend(mb_disp(spec), [0, 0], mb_front_size_for(spec), mb_font_for(spec)) children();
 }
 
-// Apply one main-block legend cell. String -> single centered legend (glyph or
-// word per the mode, in the right font); [lower, upper] pair -> two stacked.
-// `front` is the matching cell of mb_main_front (see mb_front).
+// Wrap children in the top-face legend(s) for one cell. String -> single
+// centered legend (glyph or word per the mode, in the right font);
+// [lower, upper] pair -> two stacked at 0.8x (number + shifted symbol, or
+// "fn" + a padlock). Blank mode passes through untouched.
+function mb_pair_size(s) = $font_size * 0.8 * (mb_is_icon(mb_disp(s)) ? $mb_icon_scale : 1);
+module mb_top(spec) {
+  if ($mb_blank || is_undef(spec) || spec == "") children();
+  else if (is_list(spec))
+    legend(mb_disp(spec[0]), [0,  0.8], mb_pair_size(spec[0]), mb_font_for(spec[0]))   // lower
+      legend(mb_disp(spec[1]), [0, -0.8], mb_pair_size(spec[1]), mb_font_for(spec[1]))  // upper
+        children();
+  else legend(mb_disp(spec), [0, 0], mb_size_for(spec), mb_font_for(spec)) children();
+}
+
+// One main-block key: top legend cell + matching front cell (see mb_front).
 module mb_main_key(spec, front = "") {
   $stem_type = $mb_stem;                            // override layout()'s hardcoded cherry()
-  mb_front(front) {
-    if ($mb_blank) {
-      key();                                          // blank cap, no legend
-    } else if (is_list(spec)) {
-      legend(spec[0], [0,  0.8], $font_size * 0.8)    // lower: number
-        legend(spec[1], [0, -0.8], $font_size * 0.8)  // upper: shifted symbol
-          key();
-    } else {
-      legend(mb_disp(spec), [0, 0], mb_size_for(spec), mb_font_for(spec)) key();
-    }
-  }
+  mb_front(front) mb_top(spec) key();
 }
 
 // profile   : "dsa"/"g20" (uniform) or a sculpted MX profile: "oem","cherry",
@@ -206,7 +226,8 @@ module mb_main_key(spec, front = "") {
 // symbol_font : font for the plain-Unicode glyphs in mb_glyphs (⌘⌥⌃⇧⇪⌫⌦ and the
 //             arrows). Defaults to the main `font`; for a text-only font
 //             (National Park) set e.g. "DejaVu Sans Mono". The SF Symbols in
-//             mb_glyphs always come from SF Pro regardless.
+//             mb_glyphs always come from SF Pro, and the two Bluetooth glyphs
+//             from a Nerd Font (mb_bt_font), regardless.
 // symbols     : true (default) -> words with an entry in mb_glyphs are drawn as
 //             that glyph. false -> the words themselves are engraved, all in the
 //             main font, so neither a symbol font nor SF Pro is needed.
@@ -217,7 +238,7 @@ module mb_main_key(spec, front = "") {
 // front_legend_size : font size (mm) for the front legends. Default = legend_size,
 //             so a glyph shared between faces (⌫ on top, ⌦ on the front of the
 //             same thumb) prints at one size. Multi-character words shrink 0.8x.
-// icon_scale  : SF Symbol size relative to the legend size (default 0.88), tuned
+// icon_scale  : icon-glyph size relative to the legend size (default 0.88), tuned
 //             so the icons sit visually level with the letters while fitting the
 //             short front face.
 module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, thumb_raise = 0, column_sculpt = "disable", legend_size = 3.6, font = undef, symbol_font = undef, symbols = true, legends = true, front_legends = true, front_legend_size = undef, icon_scale = 0.8, stem = "cherry") {
@@ -253,7 +274,7 @@ module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, t
     [9.5, mb_right_bottom[0], mb_right_bottom_front[0]], [10.5, mb_right_bottom[1], mb_right_bottom_front[1]], [11.5, mb_right_bottom[2], mb_right_bottom_front[2]]
   ];
   for (k = mb_bottom_1u) {
-    translate_u(k[0], -4) key_profile(profile, thumb_row) mb_front(k[2]) legend(mb_disp(k[1]), [0,0], mb_size_for(k[1]), mb_font_for(k[1])) cherry() {
+    translate_u(k[0], -4) key_profile(profile, thumb_row) mb_front(k[2]) mb_top(k[1]) cherry() {
       $total_depth = $total_depth + thumb_raise;
       $stem_type = $mb_stem;
       if ($children) children(); else key();
@@ -263,7 +284,7 @@ module mountain_breeze_default(profile = "dsa", sculpt = false, thumb_row = 3, t
   // The two 2u thumbs: 2u caps with stabilizer support, inboard of each hand.
   mb_thumbs = [[5, mb_left_thumb, mb_left_thumb_front], [8, mb_right_thumb, mb_right_thumb_front]];
   for (t = mb_thumbs) {
-    translate_u(t[0], -4) key_profile(profile, thumb_row) u(2) stabilized() mb_front(t[2]) legend(mb_disp(t[1]), [0,0], mb_size_for(t[1]), mb_font_for(t[1])) cherry() {
+    translate_u(t[0], -4) key_profile(profile, thumb_row) u(2) stabilized() mb_front(t[2]) mb_top(t[1]) cherry() {
       $total_depth = $total_depth + thumb_raise;
       $stem_type = $mb_stem;
       if ($children) children(); else key();
